@@ -60,6 +60,7 @@ class DataBaseHelper {
     });
   }
 
+
   // Get all todos
   Future<List<Map<String, dynamic>>> getAllTodos() async {
     final db = await _db;
@@ -107,4 +108,20 @@ class DataBaseHelper {
       whereArgs: ['%$keyword%', '%$keyword%'],
     );
   }
+
+  Future<int> updateTodoStatus({
+    required int id,
+    required bool isDone,
+  }) async {
+    final db = await _db;
+    return await db.update(
+      todoTable,
+      {
+        columnTodoIsDone: isDone ? 1 : 0,
+      },
+      where: '$columnTodoSno = ?',
+      whereArgs: [id],
+    );
+  }
+
 }

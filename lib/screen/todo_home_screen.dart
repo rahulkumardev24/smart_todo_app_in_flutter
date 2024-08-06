@@ -34,6 +34,18 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
     });
   }
 
+  // Search
+  void _searchTask(String keyword) async {
+    if (keyword.isEmpty) {
+      getAllTodo(); // Fetch all todos if search keyword is empty
+    } else {
+      List<Map<String, dynamic>> results = await mainDB.searchTodos(keyword);
+      setState(() {
+        allTodo = results; // Update the list with search results
+      });
+    }
+  }
+
   void _showEditBottomSheet(Map<String, dynamic> todo) {
     // Initialize controllers with current todo values
     title.text = todo[DataBaseHelper.columnTodoTitle].toString();
@@ -102,11 +114,14 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                         width: 120,
                         child: ElevatedButton(
                           onPressed: () {
-                            String todoDate = todo[DataBaseHelper.columnTodoDate].toString();
+                            String todoDate =
+                                todo[DataBaseHelper.columnTodoDate].toString();
                             DateTime parsedDate = DateTime.parse(todoDate);
-                            String formattedDate = DateFormat('yyyy-MM-dd').format(parsedDate);
+                            String formattedDate =
+                                DateFormat('yyyy-MM-dd').format(parsedDate);
 
-                            print('Updating Todo with date: $formattedDate'); // Debug print
+                            print(
+                                'Updating Todo with date: $formattedDate'); // Debug print
 
                             mainDB.updateTodo(
                               id: todo[DataBaseHelper.columnTodoSno],
@@ -144,9 +159,6 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
       },
     );
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -386,7 +398,7 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
           const SizedBox(
             height: 20,
           ),
-          const Search(),
+          Search(onSearchChanged: _searchTask),
           const SizedBox(
             height: 10,
           ),
@@ -418,27 +430,44 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                               children: [
                                 Expanded(
                                   child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
+                                      // ...........CHECK......... BOX..........
                                       Checkbox(
-                                          value: false, onChanged: (value) {}),
+                                          value: allTodo[index][DataBaseHelper
+                                                  .columnTodoIsDone] ==
+                                              1,
+                                          onChanged: (bool? value) async {
+                                            await mainDB.updateTodoStatus(
+                                              id: allTodo[index][
+                                                  DataBaseHelper.columnTodoSno],
+                                              isDone: value!,
+                                            );
+                                            getAllTodo();
+                                            setState(() {});
+                                          }),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
+
+                                            // ...............TITLE............//
                                             Text(
                                               todoTitle,
                                               style: const TextStyle(
-                                                fontSize: 20,
+                                                fontSize: 18,
                                                 fontWeight: FontWeight.bold,
                                                 fontFamily: "myFont",
                                               ),
                                               maxLines: 1,
                                             ),
+                                            // ..............Message..........//
                                             Text(
                                               todoMessage,
                                               style: const TextStyle(
-                                                fontSize: 18,
+                                                fontSize: 16,
                                                 fontFamily: "myFont",
                                               ),
                                               maxLines: 3,
@@ -456,22 +485,28 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                                                             .columnTodoSno]);
                                                 getAllTodo();
                                               },
-                                              icon: const Icon(Icons.delete , size: 30, color: Colors.red,)),
-                                          IconButton(
-
                                               icon: const Icon(
-                                                (Icons.edit),
+                                                Icons.delete,
                                                 size: 30,
-                                                color: Colors.green,
-                                                shadows: [
-                                                  Shadow(
-                                                      color: Colors.black,
-                                                      blurRadius: 3,
-                                                      offset: Offset(2.0, 2.0))
-                                                ],
-                                              ), onPressed: () {
-                                                _showEditBottomSheet(allTodo[index]);
-                                          },)
+                                                color: Colors.red,
+                                              )),
+                                          IconButton(
+                                            icon: const Icon(
+                                              (Icons.edit),
+                                              size: 30,
+                                              color: Colors.green,
+                                              shadows: [
+                                                Shadow(
+                                                    color: Colors.black,
+                                                    blurRadius: 3,
+                                                    offset: Offset(2.0, 2.0))
+                                              ],
+                                            ),
+                                            onPressed: () {
+                                              _showEditBottomSheet(
+                                                  allTodo[index]);
+                                            },
+                                          )
                                         ],
                                       )
                                     ],
@@ -489,13 +524,18 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                                             color: Colors.deepPurple)),
                                   ),
                                 ),
-                                Text(
-                                  DateFormat('MMM d, yyyy hh:mm a')
-                                      .format(parsedDate),
-                                  style: const TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.black45,
-                                      fontFamily: "myFont"),
+
+                                // .........DATE...............//
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                  child: Text(
+                                    DateFormat('MMM d, yyyy hh:mm a')
+                                        .format(parsedDate),
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black45,
+                                        fontFamily: "myFont"),
+                                  ),
                                 )
                               ],
                             ),
