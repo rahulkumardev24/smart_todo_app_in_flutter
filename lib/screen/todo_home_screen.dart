@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 // Import DateFormat for date formatting
 import 'package:smart_todo/data/local/data_base_helper.dart';
+import 'package:smart_todo/widgets/pi_chart_task_done.dart';
 
 // Assuming Search widget is defined in search_bar.dart
 import '../widgets/search_bar.dart';
@@ -119,10 +120,6 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                             DateTime parsedDate = DateTime.parse(todoDate);
                             String formattedDate =
                                 DateFormat('yyyy-MM-dd').format(parsedDate);
-
-                            print(
-                                'Updating Todo with date: $formattedDate'); // Debug print
-
                             mainDB.updateTodo(
                               id: todo[DataBaseHelper.columnTodoSno],
                               title: title.text,
@@ -393,12 +390,18 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
           ],
         ),
       ),
+      // ................................... BODY PART ...................//
       body: Column(
         children: [
           const SizedBox(
             height: 20,
           ),
           Search(onSearchChanged: _searchTask),
+          const Padding(
+            padding:  EdgeInsets.all(10.0),
+            child: Card(child: PiChartTaskDone()
+            ),
+          ),
           const SizedBox(
             height: 10,
           ),
@@ -435,18 +438,18 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                                     children: [
                                       // ...........CHECK......... BOX..........
                                       Checkbox(
-                                          value: allTodo[index][DataBaseHelper
-                                                  .columnTodoIsDone] ==
-                                              1,
-                                          onChanged: (bool? value) async {
-                                            await mainDB.updateTodoStatus(
-                                              id: allTodo[index][
-                                                  DataBaseHelper.columnTodoSno],
-                                              isDone: value!,
-                                            );
-                                            getAllTodo();
-                                            setState(() {});
-                                          }),
+                                        value: allTodo[index][DataBaseHelper.columnTodoIsDone] == 1,
+                                        onChanged: (bool? value) async {
+                                          await mainDB.updateTodoStatus(
+                                            id: allTodo[index][DataBaseHelper.columnTodoSno],
+                                            isDone: value!,
+                                          );
+
+                                          await getAllTodo();
+                                          setState(() {});  // This will trigger the pie chart to refresh
+                                        },
+                                      ),
+
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
