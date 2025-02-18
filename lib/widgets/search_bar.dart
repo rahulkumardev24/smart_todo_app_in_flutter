@@ -21,7 +21,7 @@ class _SearchState extends State<Search> {
           Expanded(
             child: TextFormField(
               onChanged: widget.onSearchChanged,
-              decoration: const InputDecoration(
+              decoration:  InputDecoration(
                 hintText: 'Search Todo',
                 hintStyle: TextStyle(
                     fontFamily: "myFont", color: Colors.white, fontSize: 22),
@@ -32,15 +32,16 @@ class _SearchState extends State<Search> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Colors.orange,
+                fillColor: Colors.orange.shade300,
               ),
             ),
           ),
           SizedBox(
             height: 80,
             child: FloatingActionButton(
+              elevation: 0,
               onPressed: () {},
-              backgroundColor: Colors.deepPurple,
+              backgroundColor: Colors.orange,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(
                     topRight: Radius.circular(10),

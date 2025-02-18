@@ -3,6 +3,8 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 // Import DateFormat for date formatting
 import 'package:smart_todo/data/local/data_base_helper.dart';
+import 'package:smart_todo/utils/custom_text_style.dart';
+import 'package:smart_todo/widgets/my_text_field.dart';
 import 'package:smart_todo/widgets/pi_chart_task_done.dart';
 
 // Assuming Search widget is defined in search_bar.dart
@@ -20,7 +22,6 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
   TextEditingController message = TextEditingController();
   late final DataBaseHelper mainDB;
   List<Map<String, dynamic>> allTodo = [];
-
   @override
   void initState() {
     super.initState();
@@ -35,25 +36,29 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
     });
   }
 
-  // Search
+  void refreshChart() async {
+    await getAllTodo();
+    setState(() {});
+  }
+
+  ///--------------------- Search ----------------------------------///
   void _searchTask(String keyword) async {
     if (keyword.isEmpty) {
-      getAllTodo(); // Fetch all todos if search keyword is empty
+      getAllTodo();
     } else {
       List<Map<String, dynamic>> results = await mainDB.searchTodos(keyword);
       setState(() {
-        allTodo = results; // Update the list with search results
+        allTodo = results;
       });
     }
   }
 
+  /// ----------------- update bottom sheet --------------------///
   void _showEditBottomSheet(Map<String, dynamic> todo) {
-    // Initialize controllers with current todo values
     title.text = todo[DataBaseHelper.columnTodoTitle].toString();
     message.text = todo[DataBaseHelper.columnTodoMessage].toString();
 
     showModalBottomSheet(
-      elevation: 15,
       context: context,
       builder: (context) {
         return SizedBox(
@@ -64,86 +69,103 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     "Update Todo",
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                    style: myTextStyle24(fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: title,
-                    decoration: InputDecoration(
-                      labelText: "Title",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
+                  Divider(),
+
+                  ///---------- Title------------///
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Title",
+                        style: myTextStyle18(fontWeight: FontWeight.bold),
                       ),
-                    ),
+                      SizedBox(
+                        height: 11,
+                      ),
+                      MyTextField(
+                        textEditingController: title,
+                        hintText: "Enter title here",
+                        hintColor: Colors.black45,
+                      ),
+                    ],
                   ),
+
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: message,
-                    decoration: InputDecoration(
-                      labelText: "Message",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
+
+                  ///---------- Message ------------///
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Message",
+                        style: myTextStyle18(fontWeight: FontWeight.bold),
                       ),
-                    ),
-                    maxLines: 3,
+                      SizedBox(
+                        height: 11,
+                      ),
+                      MyTextField(
+                        textEditingController: message,
+                        hintText: "Enter message here",
+                        hintColor: Colors.black45,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      SizedBox(
-                        width: 120,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            side: const BorderSide(width: 1, color: Colors.red),
+                      OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(fontSize: 22, color: Colors.red),
-                          ),
+                          side: const BorderSide(width: 1, color: Colors.red),
+                        ),
+                        child: Text(
+                          "Cancel",
+                          style: myTextStyle24(
+                              fontWeight: FontWeight.bold,
+                              fontColor: Colors.red),
                         ),
                       ),
-                      SizedBox(
-                        width: 120,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            String todoDate =
-                                todo[DataBaseHelper.columnTodoDate].toString();
-                            DateTime parsedDate = DateTime.parse(todoDate);
-                            String formattedDate =
-                                DateFormat('yyyy-MM-dd').format(parsedDate);
-                            mainDB.updateTodo(
-                              id: todo[DataBaseHelper.columnTodoSno],
-                              title: title.text,
-                              message: message.text,
-                              date: formattedDate,
-                            );
+                      ElevatedButton(
+                        onPressed: () {
+                          String todoDate =
+                              todo[DataBaseHelper.columnTodoDate].toString();
+                          DateTime parsedDate = DateTime.parse(todoDate);
+                          String formattedDate =
+                              DateFormat('yyyy-MM-dd').format(parsedDate);
+                          mainDB.updateTodo(
+                            id: todo[DataBaseHelper.columnTodoSno],
+                            title: title.text,
+                            message: message.text,
+                            date: formattedDate,
+                          );
 
-                            getAllTodo();
-                            title.clear();
-                            message.clear();
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            shadowColor: Colors.green,
-                            elevation: 8,
-                            backgroundColor: Colors.green,
+                          getAllTodo();
+                          title.clear();
+                          message.clear();
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
-                            "Update",
-                            style: TextStyle(fontSize: 22, color: Colors.white),
-                          ),
+                          shadowColor: Colors.green,
+                          backgroundColor: Colors.green,
+                        ),
+                        child: Text(
+                          "Update",
+                          style: myTextStyle24(
+                              fontWeight: FontWeight.bold,
+                              fontColor: Colors.white),
                         ),
                       ),
                     ],
@@ -160,190 +182,136 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      ///---------------------------APPBAR--------------------------------///
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Icon(
-              Icons.menu,
-              size: 30,
-            ),
-            const Text(
-              "TODO",
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-                fontFamily: "myFont",
-              ),
-            ),
-            Container(
-              height: 50,
-              width: 50,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(200),
-                image: const DecorationImage(
-                  image: AssetImage(
-                    "assets/image/devrahul.jpg",
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ],
+        title: Text(
+          "TODO",
+          style: TextStyle(
+              fontSize: 25, fontFamily: "myFont", fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.asset("assets/image/notes.png"),
+          )
+        ],
       ),
+
+      /// ---------------- Floating Action button --------------------------///
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           showModalBottomSheet(
             backgroundColor: Colors.orangeAccent.shade200,
-            elevation: 15,
+            elevation: 0,
             context: context,
             builder: (context) {
               return SizedBox(
                 width: double.infinity,
                 child: Column(
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: Text(
-                        "Add Todo",
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontFamily: "myFont",
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: Text("Add Todo",
+                          style: myTextStyle24(fontColor: Colors.white)),
                     ),
+                    Divider(),
+
+                    /// title
                     Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: TextField(
-                        controller: title,
-                        decoration: InputDecoration(
-                          filled: false,
-                          border: InputBorder.none,
-                          labelText: "Title",
-                          labelStyle: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: "myFont",
-                            color: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Title",
+                            style: myTextStyle18(fontWeight: FontWeight.bold),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: const BorderSide(
-                              width: 2,
-                              color: Colors.white,
-                            ),
+                          SizedBox(
+                            height: 11,
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: const BorderSide(
-                              width: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                          disabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: const BorderSide(
-                              width: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
+                          MyTextField(
+                            textEditingController: title,
+                            hintText: "Enter title here",
+                            hintColor: Colors.black45,
+                            borderColor: Colors.white,
+                          )
+                        ],
                       ),
                     ),
+
+                    /// message
                     Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: TextField(
-                        controller: message,
-                        decoration: InputDecoration(
-                          filled: false,
-                          border: InputBorder.none,
-                          labelText: "Message",
-                          labelStyle: const TextStyle(
-                            fontSize: 20,
-                            fontFamily: "myFont",
-                            color: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Message",
+                            style: myTextStyle18(fontWeight: FontWeight.bold),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: const BorderSide(
-                              width: 2,
-                              color: Colors.white,
-                            ),
+                          SizedBox(
+                            height: 11,
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: const BorderSide(
-                              width: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                          disabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: const BorderSide(
-                              width: 2,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        maxLines: 3,
+                          MyTextField(
+                            textEditingController: message,
+                            hintText: "Enter message here",
+                            hintColor: Colors.black45,
+                            borderColor: Colors.white,
+                            maxLine: 3,
+                          )
+                        ],
                       ),
                     ),
+
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        SizedBox(
-                          width: 120,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              side: const BorderSide(
-                                width: 1,
-                                color: Colors.red,
-                              ),
+                        /// cancel button
+                        OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Text(
-                              "Cancel",
-                              style: TextStyle(fontSize: 22, color: Colors.red),
+                            side: const BorderSide(
+                              width: 1,
+                              color: Colors.red,
                             ),
                           ),
+                          child: Text(
+                            "Cancel",
+                            style: myTextStyle24(fontColor: Colors.red),
+                          ),
                         ),
-                        SizedBox(
-                          width: 120,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              mainDB.addTodo(
-                                title: title.text.toString(),
-                                message: message.text.toString(),
-                              );
-                              getAllTodo();
-                              title.clear();
-                              message.clear();
-                              Navigator.pop(context);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              shadowColor: Colors.green,
-                              elevation: 8,
-                              backgroundColor: Colors.deepPurple,
+                        ElevatedButton(
+                          onPressed: () {
+                            mainDB.addTodo(
+                              title: title.text.toString(),
+                              message: message.text.toString(),
+                            );
+                            getAllTodo();
+                            title.clear();
+                            message.clear();
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Text(
-                              "Add",
-                              style:
-                                  TextStyle(fontSize: 22, color: Colors.white),
-                            ),
+                            backgroundColor: Colors.white,
+                          ),
+                          child: Text(
+                            "Add",
+                            style: myTextStyle24(
+                                fontColor: Colors.orange,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -356,52 +324,34 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
         },
         backgroundColor: Colors.orangeAccent.shade200,
         foregroundColor: Colors.white,
-        label: const Row(
+        label: Row(
           children: [
             Icon(
               Icons.add,
               size: 30,
-              shadows: [
-                Shadow(
-                  color: Colors.black,
-                  blurRadius: 3,
-                  offset: Offset(2.0, 2.2),
-                ),
-              ],
             ),
             SizedBox(
               width: 8,
             ),
             Text(
               "TODO",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                fontFamily: "myFont",
-                shadows: [
-                  Shadow(
-                    color: Colors.black,
-                    blurRadius: 3,
-                    offset: Offset(2.0, 2.2),
-                  ),
-                ],
-              ),
+              style: myTextStyle24(fontColor: Colors.white),
             ),
           ],
         ),
       ),
-      // ................................... BODY PART ...................//
+
+      /// ................................... BODY PART ...................//
       body: Column(
         children: [
-          const SizedBox(
-            height: 20,
-          ),
+          ///--------------------- search box -----------------------///
           Search(onSearchChanged: _searchTask),
-          const Padding(
-            padding:  EdgeInsets.all(10.0),
-            child: Card(child: PiChartTaskDone()
-            ),
+
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Card(child: PiChartTaskDone(refreshChart: refreshChart)),
           ),
+
           const SizedBox(
             height: 10,
           ),
@@ -417,152 +367,171 @@ class _TodoHomeScreenState extends State<TodoHomeScreen> {
                       String todoDate =
                           allTodo[index][DataBaseHelper.columnTodoDate];
                       DateTime parsedDate = DateTime.parse(todoDate);
-                      return SizedBox(
-                        height: 150,
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10.0, vertical: 7),
-                          child: Card(
-                            elevation: 5,
-                            color: const Color(0xfbffe5ad),
-                            shadowColor: Colors.deepPurple,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // ...........CHECK......... BOX..........
-                                      Checkbox(
-                                        value: allTodo[index][DataBaseHelper.columnTodoIsDone] == 1,
-                                        onChanged: (bool? value) async {
-                                          await mainDB.updateTodoStatus(
-                                            id: allTodo[index][DataBaseHelper.columnTodoSno],
-                                            isDone: value!,
-                                          );
 
-                                          await getAllTodo();
-                                          setState(() {});  // This will trigger the pie chart to refresh
-                                        },
-                                      ),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 4.0, horizontal: 12),
+                        child: Card(
+                          color: const Color(0xfbffe5ad),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Checkbox(
+                                    value: allTodo[index]
+                                            [DataBaseHelper.columnTodoIsDone] ==
+                                        1,
+                                    onChanged: (bool? value) async {
+                                      await mainDB.updateTodoStatus(
+                                        id: allTodo[index]
+                                            [DataBaseHelper.columnTodoSno],
+                                        isDone: value!,
+                                      );
 
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
+                                      setState(() {
+                                        getAllTodo();
+                                      });
 
-                                            // ...............TITLE............//
-                                            Text(
-                                              todoTitle,
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                fontFamily: "myFont",
-                                              ),
-                                              maxLines: 1,
-                                            ),
-                                            // ..............Message..........//
-                                            Text(
-                                              todoMessage,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontFamily: "myFont",
-                                              ),
-                                              maxLines: 3,
-                                            ),
-                                          ],
+                                      refreshChart();
+                                    },
+                                  ),
+
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          todoTitle,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: "myFont",
+                                          ),
                                         ),
-                                      ),
-                                      Column(
-                                        children: [
-                                          IconButton(
-                                              onPressed: () {
-                                                mainDB.deleteTodo(
-                                                    id: allTodo[index][
-                                                        DataBaseHelper
-                                                            .columnTodoSno]);
-                                                getAllTodo();
-                                              },
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                size: 30,
-                                                color: Colors.red,
-                                              )),
-                                          IconButton(
-                                            icon: const Icon(
-                                              (Icons.edit),
-                                              size: 30,
-                                              color: Colors.green,
-                                              shadows: [
-                                                Shadow(
-                                                    color: Colors.black,
-                                                    blurRadius: 3,
-                                                    offset: Offset(2.0, 2.0))
+                                        Text(
+                                          todoMessage,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontFamily: "myFont",
+                                          ),
+                                          maxLines: 3,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  ///  Edit & Delete Buttons
+                                  Column(
+                                    children: [
+                                      /// ----------------- Delete Button --------------------///
+                                      IconButton(
+                                        onPressed: () async {
+                                          bool confirmDelete = await showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: Text(
+                                                "Confirm Delete",
+                                                style: myTextStyle24(),
+                                              ),
+                                              content: Text(
+                                                "Are you sure you want to delete this task?",
+                                                style: myTextStyle12(),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context,
+                                                        false); // Cancel delete
+                                                  },
+                                                  child: Text(
+                                                    "Cancel",
+                                                    style: myTextStyle18(
+                                                        fontColor:
+                                                            Colors.black45),
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context,
+                                                        true); // Confirm delete
+                                                  },
+                                                  child: Text(
+                                                    "Delete",
+                                                    style: myTextStyle18(
+                                                        fontColor: Colors.red),
+                                                  ),
+                                                ),
                                               ],
                                             ),
-                                            onPressed: () {
-                                              _showEditBottomSheet(
-                                                  allTodo[index]);
-                                            },
-                                          )
-                                        ],
+                                          );
+                                          if (confirmDelete == true) {
+                                            await mainDB.deleteTodo(
+                                              id: allTodo[index][
+                                                  DataBaseHelper.columnTodoSno],
+                                            );
+
+                                            setState(() {
+                                              getAllTodo();
+                                            });
+
+                                            refreshChart();
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          size: 30,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.edit,
+                                          size: 30,
+                                          color: Colors.green,
+                                        ),
+                                        onPressed: () {
+                                          _showEditBottomSheet(allTodo[index]);
+                                        },
                                       )
                                     ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10.0),
-                                  child: Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(5),
-                                        border: Border.all(
-                                            width: 1,
-                                            color: Colors.deepPurple)),
-                                  ),
-                                ),
+                                  )
+                                ],
+                              ),
 
-                                // .........DATE...............//
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Text(
-                                    DateFormat('MMM d, yyyy hh:mm a')
-                                        .format(parsedDate),
-                                    style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.black45,
-                                        fontFamily: "myFont"),
+                              ///  Divider
+                              const Divider(),
+
+                              ///  Display Date
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4.0),
+                                child: Text(
+                                  DateFormat('MMM d, yyyy hh:mm a')
+                                      .format(parsedDate),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black,
+                                    fontFamily: "myFont",
                                   ),
-                                )
-                              ],
-                            ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
                     },
                   )
-                : const Align(
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 300.0),
-                      child: Center(
-                        child: Text(
-                          "Todo is not found",
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: "myFont",
-                            color: Colors.red,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                : Center(
+                    child: Text(
+                      "Todo is Empty",
+                      style: myTextStyle24(
+                          fontColor: Colors.black45,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
           ),
